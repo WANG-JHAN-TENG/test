@@ -229,9 +229,11 @@ export default {
     display: inline-block;
     transform: translateX(-33%);
     background: #8ecbcf;
-    padding: 100% 120%; 
+    height: 8vh;
+    width: 8vh; 
     color: #333; 
     cursor: pointer;
+    line-height: 8vh;
   }
   .oneTrain .button:hover {
     background: #8ecbcf7c; 
@@ -248,6 +250,8 @@ export default {
   }
   .singleCar{
     margin: 0 2%;
+    height: 100%;
+    width: 4%;
     font-size: normal;
     cursor: pointer;
     color: rgb(0, 0, 0);
