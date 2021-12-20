@@ -45,6 +45,16 @@
           </div>
           號座位
       </div>
+      <v-app>
+        <v-card
+          class="pa-md-4 mx-lg-auto pink lighten-4"
+          width="250px"
+        >
+          <v-card-text>
+            Adjust screen size to see spacing changes
+          </v-card-text>
+        </v-card>
+      </v-app>
   </div>
 </template>
 
@@ -147,14 +157,16 @@ export default {
       this.selectedCar = index;
     },
     refreshTable() {
-      const input = this.inputData;
-      const seats = this.seats;
-      for (let i = 0 ; i < input.length ; i++ ){
-        for (let j = 0 ; j < seats.length ; j++ ){
-          let seat = seats[j];
-          for ( let k = 0 ; k < seat.length ; k++){
-            if ( seat[k].No === input[i] ) {
-              seat[k].booked = "1";
+      if ( this.inputData.length > 0){
+        const input = this.inputData;
+        const seats = this.seats;
+        for (let i = 0 ; i < input.length ; i++ ){
+          for (let j = 0 ; j < seats.length ; j++ ){
+            let seat = seats[j];
+            for ( let k = 0 ; k < seat.length ; k++){
+              if ( seat[k].No === input[i] ) {
+                seat[k].booked = "1";
+              }
             }
           }
         }
