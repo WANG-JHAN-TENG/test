@@ -39,10 +39,40 @@ export default {
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/bootstrap
-    'bootstrap-vue/nuxt',
+    // 'bootstrap-vue/nuxt',
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
+    '@nuxtjs/i18n',
   ],
+
+  i18n: {
+    locales: [
+      {
+        code: "tw" ,
+        name: "繁體中文" ,
+        iso: "zh-TW" ,
+      },
+      {
+        code: "en" ,
+        name: "English" ,
+        iso: "en-US" ,
+      },
+    ],
+    defaultLocale: 'tw',
+    vueI18n: {
+      fallbackLocale: 'tw',
+      messages: {
+        tw: {
+          greeting: "哈囉你好嗎"
+        },
+        en: {
+          greeting: 'Hello world!'
+        },
+        // en: require('~/locales/en.json'),
+        // tw: require('~/locales/tw.json')
+      }
+    }
+  },
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {},
