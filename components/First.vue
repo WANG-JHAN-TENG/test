@@ -320,8 +320,10 @@ export default {
     },
     setTrain( trainInfo, data, value ) {
       const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
+        DailyTrainInfo: {
+          TrainNo: trainInfo.GeneralTrainInfo.TrainNo,
+        },
+        TrainDate: this.setDate,
         OriginStopTime: {
           DepartureTime: '',
         },
