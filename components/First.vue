@@ -3,6 +3,7 @@
       <v-container>
           <h1>{{ $t('greeting') }}</h1>
           <h1>Fare well.</h1>
+          <h3>更新所選日期列車資訊</h3>
           <v-text-field
             v-model="setDate"
             type="date"
@@ -23,6 +24,35 @@
           </v-btn>
       </v-container>
       <v-container>
+          <v-row
+            justify="space-around"
+            align="center"
+            class="my-3"
+          >
+              <h3>與官方同步</h3>
+              <v-btn
+                color="light-green"
+                dark
+                @click="findFare"
+              >update fare</v-btn>
+              <v-btn
+                color="blue-grey"
+                dark
+                @click="setFares"
+              >upload fare</v-btn>
+              <v-btn
+                color="lime"
+                dark
+                @click="getOneTrain"
+              >OneTrain</v-btn>
+              <v-btn
+                color="cyan"
+                dark
+                @click="setOneTrains"
+              >Upload OneTrain</v-btn>
+          </v-row>
+      </v-container>
+      <v-container>
           <v-text-field
             v-model="date"
             type="date"
@@ -39,10 +69,28 @@
           >
           </v-text-field>
           <v-btn
-            @click="findTrain"
+            @click="getAllMes"
           >
              search
           </v-btn>
+      </v-container>
+      <v-container>
+          <v-row>
+              <v-col>
+                  <v-text-field
+                    v-model="searchTrainNo"
+                    label="TrainNo"
+                  >
+                  </v-text-field>
+              </v-col>
+              <v-col>
+                  <v-btn
+                    @click="oneTrainSearch"
+                  >
+                      SEARCH
+                  </v-btn>
+              </v-col>
+          </v-row>
       </v-container>
   </v-app>
 </template>
@@ -60,14 +108,17 @@ export default {
     return {
       setDate: '',
       info: {},
-      // searchItems: [
-      //   '0803', '0609', '0813', '0125', '0829', '0141', '0845', '0853', '0861', '0295',
-      //   '0802', '0610', '0814', '0630', '0830', '0654', '0846', '0854', '0862', '0294',
-      // ],
-      searchItems: ['0803'],
+      fares: {},
+      oneTrains: {},
+      searchItems: [
+        '0803', '0609', '0813', '0125', '0829', '0141', '0845', '0853', '0861', '0295',
+        '0802', '0610', '0814', '0630', '0830', '0654', '0846', '0854', '0862', '0294',
+      ],
+      // searchItems: ['0802'],
       date: '',
       depart: '',
       arrival: '',
+      searchTrainNo: '',
       train0990: {
         end1000: [],
         end1010: [],
@@ -246,28 +297,11 @@ export default {
         )
           .then( ( response ) => {
             const trainInfo = response.data[0].GeneralTimetable;
-            console.log( trainInfo );
             this.setAllDate( trainInfo );
           } );
       }
       alert( 'success' );
     },
-    // setAllDate( trainInfo ) {
-    //   this.info = {
-    //     start0990: this.set0990( trainInfo ),
-    //     start1000: this.set1000( trainInfo ),
-    //     start1010: this.set1010( trainInfo ),
-    //     start1020: this.set1020( trainInfo ),
-    //     start1030: this.set1030( trainInfo ),
-    //     start1035: this.set1035( trainInfo ),
-    //     start1040: this.set1040( trainInfo ),
-    //     start1043: this.set1043( trainInfo ),
-    //     start1047: this.set1047( trainInfo ),
-    //     start1050: this.set1050( trainInfo ),
-    //     start1060: this.set1060( trainInfo ),
-    //     start1070: this.set1070( trainInfo ),
-    //   };
-    // },
     setAllDate( trainInfo ) {
       this.info = {
         start0990: this.setTrain( trainInfo, this.train0990, '0990' ),
@@ -279,7 +313,7 @@ export default {
         start1040: this.setTrain( trainInfo, this.train1040, '1040' ),
         start1043: this.setTrain( trainInfo, this.train1043, '1043' ),
         start1047: this.setTrain( trainInfo, this.train1047, '1047' ),
-        start1050: this.setTrain( trainInfo, this.tarin1050, '1050' ),
+        start1050: this.setTrain( trainInfo, this.train1050, '1050' ),
         start1060: this.setTrain( trainInfo, this.train1060, '1060' ),
         start1070: this.setTrain( trainInfo, this.train1070, '1070' ),
       };
@@ -303,401 +337,102 @@ export default {
           item.OriginStopTime.DepartureTime = start;
         }
       }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 && item.OriginStopTime.DepartureTime !== '' ) {
-        this.insertTrainInfo( stops, item, data, value );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 && item.OriginStopTime.DepartureTime !== '' ) {
-        this.insertTrainInfo2( stops, item, data, value );
-      }
-      return data;
-    },
-    set0990( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '0990' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      this.insertTrainInfo( stops, item, this.train0990, '0990' );
-      return this.train0990;
-    },
-    set1000( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1000' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
+      let result = [];
       if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1000, '1000' );
+        result = this.insertTrainInfo( stops, item, data, value );
       } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1000, '1000' );
+        result = this.insertTrainInfo2( stops, item, data, value );
       }
-      return this.train1000;
-    },
-    set1010( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1010' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1010, '1010' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1010, '1010' );
-      }
-      return this.train1010;
-    },
-    set1020( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1020' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1020, '1020' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1020, '1020' );
-      }
-      return this.train1020;
-    },
-    set1030( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1030' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1030, '1030' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1030, '1030' );
-      }
-      return this.train1030;
-    },
-    set1035( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1035' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1035, '1035' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1035, '1035' );
-      }
-      return this.train1035;
-    },
-    set1040( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1040' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1040, '1040' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1040, '1040' );
-      }
-      return this.train1040;
-    },
-    set1043( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1043' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1043, '1043' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1043, '1043' );
-      }
-      return this.train1043;
-    },
-    set1047( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1047' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1047, '1047' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1047, '1047' );
-      }
-      return this.train1047;
-    },
-    set1050( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1050' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1050, '1050' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1050, '1050' );
-      }
-      return this.train1050;
-    },
-    set1060( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1060' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      if ( trainInfo.GeneralTrainInfo.Direction === 0 ) {
-        this.insertTrainInfo( stops, item, this.train1060, '1060' );
-      } else if ( trainInfo.GeneralTrainInfo.Direction === 1 ) {
-        this.insertTrainInfo2( stops, item, this.train1060, '1060' );
-      }
-      return this.train1060;
-    },
-    set1070( trainInfo ) {
-      const item = {
-        trainNo: trainInfo.GeneralTrainInfo.TrainNo,
-        trainDate: this.setDate,
-        OriginStopTime: {
-          DepartureTime: '',
-        },
-        DestinationStopTime: {
-          ArrivalTime: '',
-        },
-      };
-      let start = '';
-      const stops = trainInfo.StopTimes;
-      for ( let i = 0; i < stops.length; i++ ) {
-        if ( stops[i].StationID === '1070' ) {
-          start = stops[i].DepartureTime;
-          item.OriginStopTime.DepartureTime = start;
-        }
-      }
-      this.insertTrainInfo2( stops, item, this.train1070, '1070' );
-      return this.train1070;
+      return result;
     },
     insertTrainInfo( stops, info, trainInfo, depart ) {
       const train = trainInfo;
-      let item = {};
-      let stop = {};
-      for ( let i = 0; i < stops.length; i++ ) {
-        item = JSON.parse( JSON.stringify( info ) );
-        stop = stops[i];
-        if ( stop.StationID === '1000' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1000.push( item );
-        } else if ( stop.StationID === '1010' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1010.push( item );
-        } else if ( stop.StationID === '1020' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1020.push( item );
-        } else if ( stop.StationID === '1030' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1030.push( item );
-        } else if ( stop.StationID === '1035' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1035.push( item );
-        } else if ( stop.StationID === '1040' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1040.push( item );
-        } else if ( stop.StationID === '1043' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1043.push( item );
-        } else if ( stop.StationID === '1047' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1047.push( item );
-        } else if ( stop.StationID === '1050' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1050.push( item );
-        } else if ( stop.StationID === '1060' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1060.push( item );
-        } else if ( stop.StationID === '1070' && stop.StationID > depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1070.push( item );
+      if ( info.OriginStopTime.DepartureTime !== '' ) {
+        let item = {};
+        let stop = {};
+        for ( let i = 0; i < stops.length; i++ ) {
+          item = JSON.parse( JSON.stringify( info ) );
+          stop = stops[i];
+          if ( stop.StationID === '1000' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1000.push( item );
+          } else if ( stop.StationID === '1010' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1010.push( item );
+          } else if ( stop.StationID === '1020' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1020.push( item );
+          } else if ( stop.StationID === '1030' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1030.push( item );
+          } else if ( stop.StationID === '1035' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1035.push( item );
+          } else if ( stop.StationID === '1040' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1040.push( item );
+          } else if ( stop.StationID === '1043' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1043.push( item );
+          } else if ( stop.StationID === '1047' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1047.push( item );
+          } else if ( stop.StationID === '1050' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1050.push( item );
+          } else if ( stop.StationID === '1060' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1060.push( item );
+          } else if ( stop.StationID === '1070' && stop.StationID > depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1070.push( item );
+          }
         }
       }
       return train;
     },
     insertTrainInfo2( stops, info, trainInfo, depart ) {
       const train = trainInfo;
-      let item = {};
-      let stop = {};
-      for ( let i = 0; i < stops.length; i++ ) {
-        item = JSON.parse( JSON.stringify( info ) );
-        stop = stops[i];
-        if ( stop.StationID === '1000' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1000.push( item );
-        } else if ( stop.StationID === '1010' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1010.push( item );
-        } else if ( stop.StationID === '1020' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1020.push( item );
-        } else if ( stop.StationID === '1030' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1030.push( item );
-        } else if ( stop.StationID === '1035' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1035.push( item );
-        } else if ( stop.StationID === '1040' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1040.push( item );
-        } else if ( stop.StationID === '1043' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1043.push( item );
-        } else if ( stop.StationID === '1047' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1047.push( item );
-        } else if ( stop.StationID === '1050' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1050.push( item );
-        } else if ( stop.StationID === '1060' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1060.push( item );
-        } else if ( stop.StationID === '1070' && stop.StationID < depart ) {
-          item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
-          train.end1070.push( item );
+      if ( info.OriginStopTime.DepartureTime !== '' ) {
+        let item = {};
+        let stop = {};
+        for ( let i = 0; i < stops.length; i++ ) {
+          item = JSON.parse( JSON.stringify( info ) );
+          stop = stops[i];
+          if ( stop.StationID === '1000' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1000.push( item );
+          } else if ( stop.StationID === '1010' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1010.push( item );
+          } else if ( stop.StationID === '1020' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1020.push( item );
+          } else if ( stop.StationID === '1030' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1030.push( item );
+          } else if ( stop.StationID === '1035' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1035.push( item );
+          } else if ( stop.StationID === '1040' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1040.push( item );
+          } else if ( stop.StationID === '1043' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1043.push( item );
+          } else if ( stop.StationID === '1047' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1047.push( item );
+          } else if ( stop.StationID === '1050' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1050.push( item );
+          } else if ( stop.StationID === '1060' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end1060.push( item );
+          } else if ( stop.StationID === '0990' && stop.StationID < depart ) {
+            item.DestinationStopTime.ArrivalTime = stop.ArrivalTime;
+            train.end0990.push( item );
+          }
         }
       }
       return train;
@@ -721,6 +456,7 @@ export default {
         } )
           .then( () => {
             alert( 'success' );
+            location.reload();
           } )
           .catch( ( e ) => {
             alert( 'failed' );
@@ -728,7 +464,151 @@ export default {
           } );
       }
     },
-    findTrain() {
+    findFare() {
+      const url = 'https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/ODFare?%24format=JSON';
+      axios.get(
+        url,
+        { headers: GetAuthorizationHeader() },
+      )
+        .then( ( response ) => {
+          this.rebuildFare( response.data );
+        } );
+      alert( 'success' );
+    },
+    rebuildFare( priceList ) {
+      const fares = {
+        start0990: this.setFare( priceList, this.train0990, '0990' ),
+        start1000: this.setFare( priceList, this.train1000, '1000' ),
+        start1010: this.setFare( priceList, this.train1010, '1010' ),
+        start1020: this.setFare( priceList, this.train1020, '1020' ),
+        start1030: this.setFare( priceList, this.train1030, '1030' ),
+        start1035: this.setFare( priceList, this.train1035, '1035' ),
+        start1040: this.setFare( priceList, this.train1040, '1040' ),
+        start1043: this.setFare( priceList, this.train1043, '1043' ),
+        start1047: this.setFare( priceList, this.train1047, '1047' ),
+        start1050: this.setFare( priceList, this.train1050, '1050' ),
+        start1060: this.setFare( priceList, this.train1060, '1060' ),
+        start1070: this.setFare( priceList, this.train1070, '1070' ),
+      };
+      console.log( fares );
+      this.fares = fares;
+    },
+    setFare( priceList, data, value ) {
+      const startFares = data;
+      for ( let i = 0; i < priceList.length; i++ ) {
+        if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '0990' ) {
+          startFares.end0990 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1000' ) {
+          startFares.end1000 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1010' ) {
+          startFares.end1010 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1020' ) {
+          startFares.end1020 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1030' ) {
+          startFares.end1030 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1035' ) {
+          startFares.end1035 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1040' ) {
+          startFares.end1040 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1043' ) {
+          startFares.end1043 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1047' ) {
+          startFares.end1047 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1050' ) {
+          startFares.end1050 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1060' ) {
+          startFares.end1060 = JSON.parse( JSON.stringify( priceList[i] ) );
+        } else if ( priceList[i].OriginStationID === value && priceList[i].DestinationStationID === '1070' ) {
+          startFares.end1070 = JSON.parse( JSON.stringify( priceList[i] ) );
+        }
+      }
+      return startFares;
+    },
+    async setFares() {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
+        authDomain: 'rail-nuxt.firebaseapp.com',
+        databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
+        projectId: 'rail-nuxt',
+        storageBucket: 'rail-nuxt.appspot.com',
+        messagingSenderId: '85380246039',
+        appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
+        measurementId: 'G-4HSRY9S9HE',
+      };
+      const result = confirm( 'set?' );
+      if ( result ) {
+        const db = getDatabase( initializeApp( firebaseConfig ) );
+        set( ref( db, 'fares' ), {
+          fare: this.fares,
+        } )
+          .then( () => {
+            alert( 'success' );
+            location.reload();
+          } )
+          .catch( ( e ) => {
+            alert( 'failed' );
+            console.error( e );
+          } );
+      }
+    },
+    async getOneTrain() {
+      let train = '';
+      for ( let i = 0; i < this.searchItems.length; i++ ) {
+        train = this.searchItems[i];
+        const url = `https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable/TrainNo/${train}?%24top=30&%24format=JSON`;
+        axios.get(
+          url,
+          { headers: GetAuthorizationHeader() },
+        )
+          .then( ( response ) => {
+            this.rebuildSingleTrain( response.data[0].GeneralTimetable );
+          } );
+      }
+      console.log( this.oneTrains );
+      alert( 'success' );
+    },
+    rebuildSingleTrain( data ) {
+      const trainNo = data.GeneralTrainInfo.TrainNo;
+      this.oneTrains[`No${trainNo}`] = JSON.parse( JSON.stringify( data ) );
+    },
+    setOneTrains() {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
+        authDomain: 'rail-nuxt.firebaseapp.com',
+        databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
+        projectId: 'rail-nuxt',
+        storageBucket: 'rail-nuxt.appspot.com',
+        messagingSenderId: '85380246039',
+        appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
+        measurementId: 'G-4HSRY9S9HE',
+      };
+      const result = confirm( 'set?' );
+      if ( result ) {
+        const db = getDatabase( initializeApp( firebaseConfig ) );
+        set( ref( db, 'oneTrains' ), {
+          info: this.oneTrains,
+        } )
+          .then( () => {
+            alert( 'success' );
+            location.reload();
+          } )
+          .catch( ( e ) => {
+            alert( 'failed' );
+            console.error( e );
+          } );
+      }
+    },
+    async getAllMes() {
+      try {
+        this.backTrainInfo = [];
+        const findTrain = this.findTrain();
+        const findTicket = this.findTicket();
+        await Promise.all( [findTrain, findTicket] );
+      } catch ( err ) {
+        console.error( 'catch', err );
+      }
+    },
+    async findTrain() {
       const firebaseConfig = {
         apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
         authDomain: 'rail-nuxt.firebaseapp.com',
@@ -749,7 +629,48 @@ export default {
           alert( '查無資訊' );
         } );
     },
-
+    async findTicket() {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
+        authDomain: 'rail-nuxt.firebaseapp.com',
+        databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
+        projectId: 'rail-nuxt',
+        storageBucket: 'rail-nuxt.appspot.com',
+        messagingSenderId: '85380246039',
+        appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
+        measurementId: 'G-4HSRY9S9HE',
+      };
+      const dbRef = ref( getDatabase( initializeApp( firebaseConfig ) ) );
+      get( child( dbRef, `fares/fare/start${this.depart}/end${this.arrival}` ) )
+        .then( ( snapshot ) => {
+          console.log( snapshot.val() );
+        } )
+        .catch( ( error ) => {
+          console.log( error );
+          alert( '查無資訊' );
+        } );
+    },
+    async oneTrainSearch() {
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
+        authDomain: 'rail-nuxt.firebaseapp.com',
+        databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
+        projectId: 'rail-nuxt',
+        storageBucket: 'rail-nuxt.appspot.com',
+        messagingSenderId: '85380246039',
+        appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
+        measurementId: 'G-4HSRY9S9HE',
+      };
+      const dbRef = ref( getDatabase( initializeApp( firebaseConfig ) ) );
+      get( child( dbRef, `oneTrains/info/No${this.searchTrainNo}` ) )
+        .then( ( snapshot ) => {
+          console.log( snapshot.val() );
+        } )
+        .catch( ( error ) => {
+          console.log( error );
+          alert( '查無資訊' );
+        } );
+    },
   },
 };
 </script>
