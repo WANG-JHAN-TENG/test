@@ -13,13 +13,6 @@
             color="deep-purple"
             dark
           >
-            prepare
-          </v-btn>
-          <v-btn
-            @click="setTrainInfo"
-            color="teal"
-            dark
-          >
             update
           </v-btn>
       </v-container>
@@ -36,20 +29,10 @@
                 @click="findFare"
               >update fare</v-btn>
               <v-btn
-                color="blue-grey"
-                dark
-                @click="setFares"
-              >upload fare</v-btn>
-              <v-btn
                 color="lime"
                 dark
                 @click="getOneTrain"
-              >OneTrain</v-btn>
-              <v-btn
-                color="cyan"
-                dark
-                @click="setOneTrains"
-              >Upload OneTrain</v-btn>
+              >Update TrainList</v-btn>
           </v-row>
       </v-container>
       <v-container>
@@ -288,18 +271,15 @@ export default {
   },
   methods: {
     async getTrainInfo() {
-      for ( let i = 0; i < this.searchItems.length; i++ ) {
-        const trainNo = this.searchItems[i];
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable/TrainNo/${trainNo}?%24top=30&%24format=JSON`;
-        axios.get(
-          url,
-          { headers: GetAuthorizationHeader() },
-        )
-          .then( ( response ) => {
-            const trainInfo = response.data[0].GeneralTimetable;
-            this.setAllDate( trainInfo );
-          } );
-      }
+      await Promise.all( this.searchItems.map( ( num ) => axios.get(
+        `https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable/TrainNo/${num}?%24top=30&%24format=JSON`,
+        { headers: GetAuthorizationHeader() },
+      )
+        .then( ( response ) => {
+          const trainInfo = response.data[0].GeneralTimetable;
+          this.setAllDate( trainInfo );
+        } ) ) );
+      await this.setTrainInfo();
       alert( 'success' );
     },
     setAllDate( trainInfo ) {
@@ -466,15 +446,15 @@ export default {
           } );
       }
     },
-    findFare() {
-      const url = 'https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/ODFare?%24format=JSON';
-      axios.get(
-        url,
+    async findFare() {
+      await axios.get(
+        'https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/ODFare?%24format=JSON',
         { headers: GetAuthorizationHeader() },
       )
         .then( ( response ) => {
           this.rebuildFare( response.data );
         } );
+      await this.setFares();
       alert( 'success' );
     },
     rebuildFare( priceList ) {
@@ -492,7 +472,6 @@ export default {
         start1060: this.setFare( priceList, this.train1060, '1060' ),
         start1070: this.setFare( priceList, this.train1070, '1070' ),
       };
-      console.log( fares );
       this.fares = fares;
     },
     setFare( priceList, data, value ) {
@@ -527,53 +506,50 @@ export default {
       return startFares;
     },
     async setFares() {
-      const firebaseConfig = {
-        apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
-        authDomain: 'rail-nuxt.firebaseapp.com',
-        databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
-        projectId: 'rail-nuxt',
-        storageBucket: 'rail-nuxt.appspot.com',
-        messagingSenderId: '85380246039',
-        appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
-        measurementId: 'G-4HSRY9S9HE',
-      };
-      const result = confirm( 'set?' );
-      if ( result ) {
-        const db = getDatabase( initializeApp( firebaseConfig ) );
-        set( ref( db, 'fares' ), {
-          fare: this.fares,
-        } )
-          .then( () => {
-            alert( 'success' );
-            location.reload();
-          } )
-          .catch( ( e ) => {
-            alert( 'failed' );
-            console.error( e );
-          } );
-      }
+      console.log( this.fares );
+      // const firebaseConfig = {
+      //   apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
+      //   authDomain: 'rail-nuxt.firebaseapp.com',
+      //   databaseURL: 'https://rail-nuxt-default-rtdb.firebaseio.com',
+      //   projectId: 'rail-nuxt',
+      //   storageBucket: 'rail-nuxt.appspot.com',
+      //   messagingSenderId: '85380246039',
+      //   appId: '1:85380246039:web:82e4bcb2bdc6ed35f5ca52',
+      //   measurementId: 'G-4HSRY9S9HE',
+      // };
+      // const result = confirm( 'set?' );
+      // if ( result ) {
+      //   const db = getDatabase( initializeApp( firebaseConfig ) );
+      //   set( ref( db, 'fares' ), {
+      //     fare: this.fares,
+      //   } )
+      //     .then( () => {
+      //       alert( 'success' );
+      //       location.reload();
+      //     } )
+      //     .catch( ( e ) => {
+      //       alert( 'failed' );
+      //       console.error( e );
+      //     } );
+      // }
     },
     async getOneTrain() {
-      let train = '';
-      for ( let i = 0; i < this.searchItems.length; i++ ) {
-        train = this.searchItems[i];
-        const url = `https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable/TrainNo/${train}?%24top=30&%24format=JSON`;
-        axios.get(
-          url,
-          { headers: GetAuthorizationHeader() },
-        )
-          .then( ( response ) => {
-            this.rebuildSingleTrain( response.data[0].GeneralTimetable );
-          } );
-      }
-      console.log( this.oneTrains );
+      await Promise.all( this.searchItems.map( ( num ) => axios.get(
+        `https://ptx.transportdata.tw/MOTC/v2/Rail/THSR/GeneralTimetable/TrainNo/${num}?%24top=30&%24format=JSON`,
+        { headers: GetAuthorizationHeader() },
+      )
+        .then( ( response ) => {
+          const trainInfo = response.data[0].GeneralTimetable;
+          this.rebuildSingleTrain( trainInfo );
+        } ) ) );
+      await this.setOneTrains();
       alert( 'success' );
     },
     rebuildSingleTrain( data ) {
       const trainNo = data.GeneralTrainInfo.TrainNo;
       this.oneTrains[`No${trainNo}`] = JSON.parse( JSON.stringify( data ) );
     },
-    setOneTrains() {
+    async setOneTrains() {
       const firebaseConfig = {
         apiKey: 'AIzaSyDjAHb07_Mk-pJExz3tg04BgpB8QLHvFgY',
         authDomain: 'rail-nuxt.firebaseapp.com',
